@@ -7,8 +7,6 @@ public class Play4er : MonoBehaviour
 {
 
     float Horizontal;
-    float Vertical;
-    Vector3 direction;
     [SerializeField] float MovementSpeed = 10;
     Rigidbody rb;
     SplineFollower splineFollower;
@@ -30,19 +28,13 @@ public class Play4er : MonoBehaviour
     [SerializeField] Transform DropArea;
     int dropCount = 0;
     [SerializeField] float DropDistanceBetween = 1f;
-   [SerializeField] GameObject[] toplanabilirler;
     bool isGround=true;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
-        toplanabilirler=GameObject.FindGameObjectsWithTag("Collectable");
         var seq=DOTween.Sequence();
-        foreach (var item in toplanabilirler)
-        {
-           
-        item.transform.DORotate(new Vector3(0,90,0),1f).SetLoops(-1,LoopType.Incremental);
-        }
+        
     }
     private void OnDrawGizmos()
     {
@@ -58,6 +50,9 @@ public class Play4er : MonoBehaviour
 
             if (hit.CompareTag("Collectable"))
             {
+                var cube = hit.GetComponent<Chicken>();
+                cube.seq.Kill(true);
+                hit.transform.GetChild(2).gameObject.SetActive(false);
                 Debug.Log(hit.name);
                 hit.tag = "Collected";
                 hit.transform.parent = holdTransform;
@@ -72,7 +67,7 @@ public class Play4er : MonoBehaviour
                 var seq = DOTween.Sequence();
 
                 seq.Append(hit.transform.DOLocalJump(new Vector3(0, itemCount * ItemDistanceBetween), 2, 1, 0.2f))
-                    .Join(hit.transform.DOScale(0.3f, 0.2f));
+                    .Join(hit.transform.DOScale(0.01f, 0.2f));
                     
                 seq.AppendCallback(() =>
                 {
@@ -91,6 +86,12 @@ public class Play4er : MonoBehaviour
             isGround=false;
         }
 
+        Horizontal = Input.GetAxis("Horizontal");
+        if(transform.localPosition.x+Horizontal>-3 && transform.localPosition.x + Horizontal <3)
+        {
+            transform.localPosition += new Vector3(Horizontal * 5, 0, 0) * Time.deltaTime;
+        }
+        
 
     }
 
@@ -108,14 +109,17 @@ public class Play4er : MonoBehaviour
                 GameObject go = CollectedItems[CollectedItems.Count - 1];
                 go.transform.parent = null;
                 var Seq = DOTween.Sequence();
-                Seq.Append(go.transform.DOJump(DropArea.position + new Vector3(0, (dropCount * DropDistanceBetween), 0), 2, 1, 0.3f))
-                   .Join(go.transform.DOScale(1.5f, 0.1f))
-                   .Insert(0.1f, go.transform.DOScale(1, 0.2f))
+                Seq.Append(go.transform.DOJump(DropArea.position + new Vector3((dropCount * DropDistanceBetween),0, 0), 2, 1, 0.3f))
+                   .Join(go.transform.DOScale(0.05f, 0.1f))
+                   .Insert(0.1f, go.transform.DOScale(0.02f, 0.2f))
                    .AppendCallback(() => { go.transform.rotation = Quaternion.Euler(0, 0, 0); });
-                other.GetComponent<HoldArea>().StackedDropItems.Add(go);
                 dropCount++;
                 itemCount--;
                 CollectedItems.Remove(go);
+            }
+            else
+            {
+                anim.SetTrigger("Dance");
             }
 
 
@@ -123,12 +127,7 @@ public class Play4er : MonoBehaviour
             NextDropTime = Time.time + DropSecond / DropRate;
 
         }
-        if (CollectedItems.Count == 0)
-        {
-            StartCoroutine(other.GetComponent<HoldArea>().SellDropedItems());
-            dropCount = 0;
-
-        }
+        
 
     }
 
@@ -137,6 +136,18 @@ public class Play4er : MonoBehaviour
         if (collision.transform.CompareTag("Ground"))
         {
             isGround=true;
+        }
+
+        
+        if (collision.transform.CompareTag("Engel"))
+        {
+            Debug.Log("Oldu");
+            foreach (var item in CollectedItems)
+            {
+                Destroy(item);
+            }
+            transform.parent.GetComponent<SplineFollower>().followSpeed = 0f;
+            anim.SetTrigger("Dead");
         }
     }
 }
