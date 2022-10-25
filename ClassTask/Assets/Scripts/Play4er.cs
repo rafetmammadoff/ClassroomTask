@@ -40,7 +40,8 @@ public class Play4er : MonoBehaviour
         var seq=DOTween.Sequence();
         foreach (var item in toplanabilirler)
         {
-           seq.Append(item.transform.DORotate(new Vector3(0,90,0),1f).SetLoops(-1,LoopType.Incremental));
+           
+        item.transform.DORotate(new Vector3(0,90,0),1f).SetLoops(-1,LoopType.Incremental);
         }
     }
     private void OnDrawGizmos()
@@ -72,14 +73,13 @@ public class Play4er : MonoBehaviour
 
                 seq.Append(hit.transform.DOLocalJump(new Vector3(0, itemCount * ItemDistanceBetween), 2, 1, 0.2f))
                     .Join(hit.transform.DOScale(0.3f, 0.2f));
+                    
                 seq.AppendCallback(() =>
                 {
                     hit.transform.localRotation = Quaternion.Euler(0, 0, 0);
                 });
                 itemCount++;
                 CollectedItems.Add(hit.gameObject);
-
-
             }
         }
 
