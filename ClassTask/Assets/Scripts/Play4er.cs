@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Dreamteck.Splines;
 using DG.Tweening;
+
+using UnityEngine.SceneManagement;
 public class Play4er : MonoBehaviour
 {
 
@@ -136,6 +138,7 @@ public class Play4er : MonoBehaviour
         if (collision.transform.CompareTag("Ground"))
         {
             isGround=true;
+            anim.SetTrigger("Run");
         }
 
         
@@ -148,6 +151,11 @@ public class Play4er : MonoBehaviour
             }
             transform.parent.GetComponent<SplineFollower>().followSpeed = 0f;
             anim.SetTrigger("Dead");
+            Invoke("Restart", 3f);
         }
+    }
+     void Restart()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
